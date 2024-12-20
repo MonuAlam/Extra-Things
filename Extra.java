@@ -3,7 +3,7 @@
 private ProjectEstimation updateWithBuilder(ProjectEstimation estimation, ProjectEstimationRequest request) {
 
     return estimation.toBuilder()
-            .title(request.getTitle() != null ? request.getTitle() : estimation.getTitle())
+            .title(request.getTitle() != null?request.getTitle() : estimation.getTitle())
             .project(request.getProject() != null ? request.getProject() : estimation.getProject())
             .phase(request.getPhase() != null ? request.getPhase() : estimation.getPhase())
             .mileStones(request.getMileStones() != null ? request.getMileStones().stream().map(mile -> {
