@@ -28,3 +28,63 @@ private ProjectEstimation updateWithBuilder(ProjectEstimation estimation, Projec
                     .build()).toList() : estimation.getRoles())
             .build();
 }
+//=================================================================================================
+  //for authentication in db roles are not in the form of ROLE_USER,ROLE_ADMIN then use it
+
+	@Override
+	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+	        throws ServletException, IOException {
+
+	    String authHeader = request.getHeader("Authorization");
+	    String token = null;
+	    String username = null;
+
+	    // Extract the token from the Authorization header
+	    if (authHeader != null && authHeader.startsWith("Bearer ")) {
+	        token = authHeader.substring(7);
+	        username = jwtService.extractUserName(token); // Extract username from token
+	    }
+
+	    // If username is extracted and no authentication is set in SecurityContext
+	    if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+	        UserDetails userDetails = 
+	                context.getBean(CustomUserDetailsService.class)
+	                .loadUserByUsername(username);
+
+	        // Validate the token
+	        if (jwtService.validateToken(token, userDetails)) {
+	            // Add ROLE_ prefix to roles if needed
+	            List<SimpleGrantedAuthority> authorities = userDetails.getAuthorities().stream()
+	                    .map(authority -> new SimpleGrantedAuthority(
+	                            authority.getAuthority().startsWith("ROLE_") ? 
+	                            authority.getAuthority() : "ROLE_" + authority.getAuthority()))
+	                    .collect(Collectors.toList());
+
+	            // Create an authentication token with prefixed roles
+	            UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+	                    userDetails, null, authorities);
+
+	            authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+
+	            // Set the authentication in SecurityContext
+	            SecurityContextHolder.getContext().setAuthentication(authToken);
+	        }
+	    }
+
+	    // Proceed with the filter chain
+	    filterChain.doFilter(request, response);
+	}
+
+
+   @Bean
+   public AuthenticationProvider authenticationProvider() {
+       DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
+       provider.setPasswordEncoder(passwordEncoder());
+       provider.setUserDetailsService(userDetailsService);
+       provider.setAuthoritiesMapper(grantedAuthorities -> 
+           grantedAuthorities.stream()
+               .map(authority -> new SimpleGrantedAuthority("ROLE_" + authority.getAuthority())) // Add prefix dynamically
+               .toList()
+       );
+       return provider;
+   }  
