@@ -1,4 +1,4 @@
-//Partial Update (if req. have value change old value otherwise assign old value)
+//Partial Update (if req. have value change old value otherwise assign old value) 
 
 private ProjectEstimation updateWithBuilder(ProjectEstimation estimation, ProjectEstimationRequest request) {
 
@@ -76,15 +76,4 @@ private ProjectEstimation updateWithBuilder(ProjectEstimation estimation, Projec
 	}
 
 
-   @Bean
-   public AuthenticationProvider authenticationProvider() {
-       DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
-       provider.setPasswordEncoder(passwordEncoder());
-       provider.setUserDetailsService(userDetailsService);
-       provider.setAuthoritiesMapper(grantedAuthorities -> 
-           grantedAuthorities.stream()
-               .map(authority -> new SimpleGrantedAuthority("ROLE_" + authority.getAuthority())) // Add prefix dynamically
-               .toList()
-       );
-       return provider;
-   }  
+
